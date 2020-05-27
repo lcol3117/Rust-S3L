@@ -6,6 +6,7 @@ use std::mem::drop;
 fn main() {
   type xi_table_entry = Vec<Vec<f64>>;
   let mut rng: rand::prelude::ThreadRng = rand::thread_rng();
+  let mut agentmodel: S3L_agent = build_S3L_agent(2, 3.1, 2);
   learning_S3L();
   Done
 }
