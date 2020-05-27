@@ -109,8 +109,8 @@ impl S3LAgent {
     let mut dist: Option<f64> = None;
     for i in possible_min_vectors.iter() {
       dist = Some(self.get_l2_n_dist(closest_min, initial_vector));
-      if dist.expect(std::f64::INFINITY) < best_min_dist {
-        best_min_dist = dist.expect(std::f64::INFINITY);
+      if dist.unwrap() < best_min_dist {
+        best_min_dist = dist.unwrap();
         closest_min = i.clone();
       }
     }
@@ -119,8 +119,8 @@ impl S3LAgent {
     let mut best_max_dist: f64 = std::f64::INFINITY;
     for i in possible_max_vectors.iter() {
       dist = Some(self.get_l2_n_dist(closest_max, initial_vector));
-      if dist.expect(std::f64::INFINITY) < best_max_dist {
-        best_max_dist = dist.expect(std::f64::INFINITY);
+      if dist.unwrap() < best_max_dist {
+        best_max_dist = dist.unwrap();
         closest_max = i.clone();
       }
     }
@@ -143,16 +143,19 @@ impl S3LAgent {
     } else {
       result = Some(initial_vector);
     }
-    result
+    result.unwrap()
   }
 
   fn generate_probabilistic_max(&self) -> Vec<f64> {
     let ls: Vec<Vec<Vec<f64>>> = (self.xi_table).clone();
     let ranking: Vec<Vec<Vec<f64>>> = ls
-    .sort_by(|a, b| {a[1][0].partial_cmp(b[1][0]).unwrap()});
-    let initial_rr: Vec<Vec<Vec<f64>>> = ranking
+    .sort_by(|a, b| -> f64 {a[1][0].partial_cmp(&b[1][0]).unwrap()});
+    let initial_rr: Vec<&Vec<Vec<f64>>> = ranking
     .iter()
     .rev()
+    .collect::<Vec<&Vec<Vec<f64>>>>()
+    .iter()
+    .map(|x| {*x})
     .collect::<Vec<Vec<Vec<f64>>>>();
     let rr = initial_rr.clone();
     for i in 0..(rr.len() - 1) {
@@ -212,7 +215,7 @@ impl S3LAgent {
     .zip(b.iter());
     let dist_sum: f64 = z
     .into_iter()
-    .collect::<(&f64,&f64)>()
+    .collect::<Vec<(&f64,&f64)>>()
     .iter()
     .fold(0_f64, |a, x| {a + (((*x).0 - (*x).1).powf(2))});
     let dist: f64 = dist_sum.sqrt();
@@ -222,7 +225,7 @@ impl S3LAgent {
 
 struct Done;
 
-fn realLearnStep(agentmodel: S3LAgent) -> Vec<Vec<f64>> {
+fn real_learn_step(agentmodel: S3LAgent) -> Vec<Vec<f64>> {
   let policy: Vec<f64> = agentmodel.select_policy();
   let performance: f64 = evaluate_policy(policy);
   agentmodel.update_xi_table(policy, performance);
@@ -255,9 +258,9 @@ fn get_l2_n_dist(a: Vec<f64>, b: Vec<f64>) -> f64 {
   .zip(b.iter());
   let dist_sum: f64 = z
   .into_iter()
-  .collect::<(f64,f64)>()
+  .collect::<Vec<(&f64,&f64)>>()
   .iter()
-  .fold(0_f64, |a, x| {a + ((x.0 - x.1).powf(2))});
+  .fold(0_f64, |a, x| {a + (((*x).0 - (*x).1).powf(2))});
   let dist: f64 = dist_sum.sqrt();
   dist
 }
@@ -287,9 +290,10 @@ fn learning_S3L() -> Done {
   let mut best_xi_table_entry: Vec<Vec<f64>> = vec![best_policy, best_performance_vec];
   while not_done {
     real_learn_step(agentmodel);
-    best_xi_table_entry: Vec<Vec<f64>> = agentmodel.xi_table
+    best_xi_table_entry = agentmodel.xi_table
+    .clone()
     .iter()
-    .max_by(|a, b| {a[1][0].cmp(b[1][0]).unwrap()});
+    .max_by(|a, b| {a[1][0].cmp(b[1][0])});
     best_policy = best_xi_table_entry[0];
     best_performance = best_xi_table_entry[1][0];
     not_done = best_performance < 2.9;
