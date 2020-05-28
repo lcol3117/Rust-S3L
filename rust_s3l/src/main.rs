@@ -153,9 +153,9 @@ impl S3LAgent {
   }
 
   fn generate_probabilistic_max(&self) -> Vec<f64> {
-    let ls: Vec<Vec<Vec<f64>>> = (self.xi_table).clone();
-    let ranking: Vec<Vec<Vec<f64>>> = ls
-    .sort_by(|a: f64, b: Vec<Vec<f64>>| -> f64 {a[1][0].partial_cmp(&b[1][0]).unwrap()});
+    let ls: &Vec<Vec<Vec<f64>>> = &((self.xi_table).clone());
+    ls.sort_by(|a, b| {a[1][0].partial_cmp(&b[1][0]).unwrap()});
+    let ranking: Vec<Vec<Vec<f64>>> = ls.to_vec().clone();
     let initial_rr: Vec<Vec<Vec<f64>>> = ranking
     .iter()
     .rev()
@@ -223,7 +223,7 @@ impl S3LAgent {
     .into_iter()
     .collect::<Vec<(&f64,&f64)>>()
     .iter()
-    .fold(0_f64, |a, x| {a + (((*x).0 - (*x).1).powf(2))});
+    .fold(0_f64, |a, x| {a + (((*x).0 - (*x).1).powf(2_f64))});
     let dist: f64 = dist_sum.sqrt();
     dist
   }
@@ -266,7 +266,7 @@ fn get_l2_n_dist(a: Vec<f64>, b: Vec<f64>) -> f64 {
   .into_iter()
   .collect::<Vec<(&f64,&f64)>>()
   .iter()
-  .fold(0_f64, |a, x| {a + (((*x).0 - (*x).1).powf(2))});
+  .fold(0_f64, |a, x| {a + (((*x).0 - (*x).1).powf(2_f64))});
   let dist: f64 = dist_sum.sqrt();
   dist
 }
@@ -299,7 +299,10 @@ fn learning_S3L() -> Done {
     best_xi_table_entry = agentmodel.xi_table
     .clone()
     .iter()
-    .max_by(|a, b| {a[1][0].cmp(b[1][0]).unwrap()});
+    .max_by(|a, b| {a[1][0].partial_cmp(&b[1][0]).unwrap()})
+    .unwrap()
+    .to_vec()
+    .clone();
     best_policy = best_xi_table_entry[0];
     best_performance = best_xi_table_entry[1][0];
     not_done = best_performance < 2.9;
