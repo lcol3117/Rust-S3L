@@ -91,10 +91,16 @@ impl S3LAgent {
     let possible_mins: Vec<Vec<Vec<f64>>> = self.xi_table
     .iter()
     .filter(|x| {x[1][0] < i_avg_xi_table})
+    .collect::<Vec<&Vec<Vec<f64>>>>()
+    .iter()
+    .map(|x| {(*x).clone().to_vec()})
     .collect::<Vec<Vec<Vec<f64>>>>();
     let possible_maxs: Vec<Vec<Vec<f64>>> = self.xi_table
     .iter()
     .filter(|x| {x[1][0] >= i_avg_xi_table})
+    .collect::<Vec<&Vec<Vec<f64>>>>()
+    .iter()
+    .map(|x| {(*x).clone().to_vec()})
     .collect::<Vec<Vec<Vec<f64>>>>();
     let possible_min_vectors: Vec<Vec<f64>> = possible_mins
     .iter()
@@ -149,13 +155,13 @@ impl S3LAgent {
   fn generate_probabilistic_max(&self) -> Vec<f64> {
     let ls: Vec<Vec<Vec<f64>>> = (self.xi_table).clone();
     let ranking: Vec<Vec<Vec<f64>>> = ls
-    .sort_by(|a, b| -> f64 {a[1][0].partial_cmp(&b[1][0]).unwrap()});
-    let initial_rr: Vec<&Vec<Vec<f64>>> = ranking
+    .sort_by(|a: f64, b: Vec<Vec<f64>>| -> f64 {a[1][0].partial_cmp(&b[1][0]).unwrap()});
+    let initial_rr: Vec<Vec<Vec<f64>>> = ranking
     .iter()
     .rev()
     .collect::<Vec<&Vec<Vec<f64>>>>()
     .iter()
-    .map(|x| {*x})
+    .map(|x| {(*x).clone().to_vec()})
     .collect::<Vec<Vec<Vec<f64>>>>();
     let rr = initial_rr.clone();
     for i in 0..(rr.len() - 1) {
@@ -293,7 +299,7 @@ fn learning_S3L() -> Done {
     best_xi_table_entry = agentmodel.xi_table
     .clone()
     .iter()
-    .max_by(|a, b| {a[1][0].cmp(b[1][0])});
+    .max_by(|a, b| {a[1][0].cmp(b[1][0]).unwrap()});
     best_policy = best_xi_table_entry[0];
     best_performance = best_xi_table_entry[1][0];
     not_done = best_performance < 2.9;
