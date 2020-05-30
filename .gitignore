@@ -40,3 +40,7 @@
 
 /rust_s3l/target/*.d
 /rust_s3l/target/debug/*.d
+/rust_s3l/target/debug/build/*.d
+/rust_s3l/target/debug/deps/*.d
+/rust_s3l/target/**/*.d
+/rust_s3l/target/**/**/*.d
